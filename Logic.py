@@ -219,15 +219,59 @@ def valid_coordinates(size, point):
         valid = False
     return valid
 '''
+def print_grid(grid):
+    for row in grid:
+        print(row)
 
 def generate_path(current, grid, path_reached):
     currentx, currenty = current
+    print("generating pieces")
+    #print("current location: " + str(current))
+    print_grid(grid)
     if grid[currentx][currenty] != 0 and grid[currentx][currenty] != 1:
-        required, prohibated = get_required_prohibated(grid, current)
+        required = grid[currentx][currenty].get_open()
         while len(required) > 0:
-            next = random.choice(required)
-            required.remove(next)
-            
+            next = grid_movements_direction[random.choice(required)]
+            required.remove(grid_movements_point[next])
+            nextx, nexty = next
+            x = currentx + nextx
+            y = currenty + nexty
+            grid[x][y] = 1
+            print("from starting location " + str(current) + " to (" + str(x) + ", " + str(y) + ")")
+            path_reached = generate_path((x,y), grid, path_reached)
+    else:
+        potential_directions = grid_movements.copy()
+        changed = False
+        while len(potential_directions) > 0:
+            next = random.choice(potential_directions)
+            potential_directions.remove(next)
+            nextx, nexty = next
+            x = currentx + nextx
+            y = currenty + nexty
+            if (x >= 0 and y >= 0) and (x <= len(grid)-1 and y <= len(grid)-1):
+                if grid[x][y] == 0:
+                    print("moving from " + str(current) + " to (" + str(x)+ ", " + str(y) + ")")
+                    changed = True
+                    grid[x][y] = 1
+                    path_reached = generate_path((x,y), grid, path_reached)
+        if not path_reached:
+            count = 0
+            for row in grid:
+                for element in row:
+                    if element != 1 and element != 0:
+                        count += 1
+            if count <= 1:
+                grid[currentx][currenty] = orientation("End")
+                while not check_valid(grid, (currentx, currenty)):
+                    grid[currentx][currenty] = orientation("End")
+                print("Found end at " + str(current))
+                return True
+        else:
+            required, prohibated = get_required_prohibated(grid, current)
+            name = match_piece(prohibated, required, path_reached)
+            nextPiece = make_piece(name)
+            grid[currentx][currenty] = nextPiece
+            return True
 
 
 def make_piece(name):
@@ -365,7 +409,7 @@ def check_valid(grid, point):
                 legal = False
         else:
             test = grid[x][y]
-            if test != 0:
+            if test != 0 and test != 1:
                 test = test.get_open()
                 if directions[i] in current:
                     if direction_opposites[directions[i]] not in test:
@@ -486,10 +530,15 @@ def get_required_prohibated(grid, point):
             prohibated.append(grid_movements_point[move])
         else:
             test = grid[x][y]
-            if test != 0:
+            open_sides = directions
+            if test != 0 and test != 1:
                 open_sides = test.get_open()
                 if direction_opposites[grid_movements_point[move]] not in open_sides:
                     prohibated.append(grid_movements_point[move])
                 else:
                     required.append(grid_movements_point[move])
+            else:
+                if direction_opposites[grid_movements_point[move]] not in open_sides:
+                    prohibated.append(grid_movements_point[move])
+
     return required, prohibated

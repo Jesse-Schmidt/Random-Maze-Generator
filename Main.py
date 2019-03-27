@@ -45,8 +45,8 @@ def testing():
 
 
 
-test = True
-real = False
+test = False
+real = True
 while True:
 
     for event in pygame.event.get():
@@ -64,13 +64,13 @@ while True:
         screen.fill((255, 255, 255))
         grid = set_grid(size)
         grid,  startPoint = determing_Start_location(grid, size)
-        grid, endPoint = determine_End_location(grid, size)
         pygame.display.flip()
         update_locations(grid, piece_size)
         rendering(grid, screen)
-        generate_path(grid, startPoint, endPoint, screen, piece_size)
-        #count = Generate_Path(grid, point, direction[0], False, piece_size, size, screen)
+        generate_path(startPoint, grid,  False)
+        update_locations(grid, piece_size)
         rendering(grid, screen)
+        pygame.display.flip()
         real = False
 
 
